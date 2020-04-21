@@ -6,7 +6,7 @@ from models.newDeepModelPart import *
 from sklearn.metrics import mean_squared_error
 from preprocess.data_preprocess import *
 
-file_name = 'Chicago'
+file_name = 'adv_predict'
 train_num_epoch = 40
 dim = 3
 deep_lr = 3e-2
