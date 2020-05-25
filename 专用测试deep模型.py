@@ -16,7 +16,7 @@ dim = 3
 deep_lr = 5e-2
 tree_lr1 = 1
 tree_lr2 = 3e-2
-file_name = 'Chicago'
+file_name = 'adv_predict'
 
 
 def main():
@@ -72,11 +72,12 @@ def main():
     out1=eval_deep_model(pnn_model,test_cate_x,test_y,task='binary')
     out2 = eval_deep_model(deepfm_model, test_cate_x, test_y, task='binary')
     out3 = eval_new_deep_model(deep_model2, test_cate_x, test_nume_x, test_y, task='binary')
+    scores=make_scores(test_y,[out,out1,out2,out3])
     if task=='binary':
-        print('lr auc:{}'.format(roc_auc_score(test_y, out)))
-        print('PNN auc:{}'.format(roc_auc_score(test_y, out1)))
-        print('deepFM auc:{}'.format(roc_auc_score(test_y, out2)))
-        print('new_deep_model auc:{}'.format(roc_auc_score(test_y, out3)))
+        print('lr auc:{}'.format(scores[0]))
+        print('PNN auc:{}'.format(scores[1]))
+        print('deepFM auc:{}'.format(scores[2]))
+        print('new_deep_model auc:{}'.format(scores[3]))
     #    print('gbdt:score:{}'.format(roc_auc_score(test_y,pred_text)))
     else:
         print('lr mse:{}'.format(mean_squared_error(test_y, out)))

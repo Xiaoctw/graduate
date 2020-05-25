@@ -103,8 +103,8 @@ class gbdt_dense(nn.Module):
                 loss.backward()
                 total_loss += loss.item()
                 opt.step()
-            if epoch % 5 == 0:
-                print('训练deep模型,第{}轮,当前loss为:{}'.format(epoch, total_loss))
+            # if epoch % 5 == 0:
+            #     print('训练deep模型,第{}轮,当前loss为:{}'.format(epoch, total_loss))
         return
 
 
@@ -191,19 +191,19 @@ def construct_gbdt_dense(train_x, train_y, test_x, test_y, lr=3e-2, num_epoch=40
                 roc_score = roc_auc_score(np.array(Y), np.array(pred_train))
                 # print("前几个test_y:{}".format(test_y[:20]))
                 # print("pred_text前几个:{}".format(pred_test[:20]))
-                print('epoch:{},roc_auc:{}'.format(epoch, roc_score))
+                print('epoch:{},roc_auc:{:.4f},loss:{:.4f}'.format(epoch, roc_score,total_loss))
                 roc_auces.append(roc_score)
             model.train()
-        if epoch%3==0:
-              print("epoch:{},loss:{}".format(epoch, total_loss))
+        # if epoch%3==0:
+        #       print("epoch:{},loss:{}".format(epoch, total_loss))
         total_losses.append(total_loss)
-    plt.plot(roc_auces, label='deep_model_roc', color='g', lw=2, ls=':')
-    plt.scatter(list(range(1, len(roc_auces) + 1)), roc_auces, color='y')
-    plt.plot([gbdt_roc] * len(roc_auces), label='gbdt_roc', color='b', lw=2, ls='--')
-    plt.scatter(list(range(1, len(roc_auces) + 1)), [gbdt_roc] * len(roc_auces), color='m')
-    plt.title('roc_auc')
-    plt.legend()
-    plt.show()
+    # plt.plot(roc_auces, label='deep_model_roc', color='g', lw=2, ls=':')
+    # plt.scatter(list(range(1, len(roc_auces) + 1)), roc_auces, color='y')
+    # plt.plot([gbdt_roc] * len(roc_auces), label='gbdt_roc', color='b', lw=2, ls='--')
+    # plt.scatter(list(range(1, len(roc_auces) + 1)), [gbdt_roc] * len(roc_auces), color='m')
+    # plt.title('roc_auc')
+    # plt.legend()
+    # plt.show()
     return gbm, model
 
 

@@ -37,6 +37,8 @@ def pre_adv_predict():
                           ]
     train_y = pd.read_csv(TRAIN_LABEL_PATH)
     train_x = pd.read_csv(TRAIN_DATA_PATH)
+    print('共有特征{}'.format(train_x.shape[1]))
+    print('连续特征{}'.format(len(NUMERICAL_FEATURES)))
     nume_x=train_x[NUMERICAL_FEATURES].copy()
     train_x['Label'] = train_y['label']
     def get_mDay(s):
@@ -485,6 +487,8 @@ def pre_Chicago():
     else:
         print('当前数据不存在缺失值')
     num_feats = ['month','year','Beat', 'Latitude', 'Longitude', 'District', 'Ward', 'Community Area']
+    print('连续属性:{}'.format(len(num_feats)))
+    print('离散属性个数:{}'.format(X.shape[1]-len(num_feats)))
     num_X = X[num_feats].copy()
     def cut_Block(val):
         if val.split(' ')[-1] == 'AVE':
@@ -592,8 +596,10 @@ def pre_Chicago():
 
 
 if __name__ == '__main__':
-    train_x, train_cate_x, train_num_x, test_x, test_cate_x, test_num_x, train_y,test_y=pre_adv_predict()
-    print(train_cate_x[:10])
+    train_x, train_cate_x, train_num_x, test_x, test_cate_x, test_num_x, train_y,test_y=pre_Chicago()
+    print(train_cate_x.shape[1])
+    print(train_num_x.shape[1])
+   # print(train_cate_x[:10])
     # train_x, _, _, test_x, _, _, train_y, test_y = pre_titanic()
     # print(train_x[:10])
     # print(train_x.shape)

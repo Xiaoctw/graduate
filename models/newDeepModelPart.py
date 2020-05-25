@@ -144,7 +144,7 @@ def construct_deFmNu(train_x1, train_x2, train_y, field_size, num_field_size, fe
             opt.step()
             total_loss += loss.item()
         if epoch % 4 == 0:
-            print('Deep模型训练过程,epoch:{}，当前loss为：{}'.format(epoch, total_loss))
+            print('deFmNu模型训练过程，epoch:{}，当前loss为：{:.4f}'.format(epoch, total_loss))
         total_losses.append(total_loss)
     plt.plot(total_losses, ls='--', color='b')
     plt.scatter(list(range(len(total_losses))), total_losses, color='w',marker='o')
@@ -183,10 +183,16 @@ def update_deFmNu_model(model:nn.Module, train_cate_x,train_nume_x,train_y,batch
             opt.step()
             total_loss+=loss.item()
         #if epoch*4==0:
-        print('epoch:{},loss:{}'.format(epoch,total_loss))
+        # print('epoch:{},loss:{}'.format(epoch,total_loss))
     return model
 
 
+def make_scores(test_y,outs):
+    scores=[]
+    for out in outs:
+        scores.append(roc_auc_score(test_y,out))
+    scores.sort(reverse=False)
+    return scores
 
 def eval_new_deep_model(model: nn.Module, test_x1, test_x2, test_y, task='regression'):
     # if task == 'regression':  # 回归

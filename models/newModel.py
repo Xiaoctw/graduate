@@ -6,7 +6,7 @@ from models.newDeepModelPart import *
 from sklearn.metrics import mean_squared_error
 from preprocess.data_preprocess import *
 
-file_name = 'adv_predict'
+file_name = 'Chicago'
 train_num_epoch = 40
 dim = 3
 deep_lr = 3e-2
@@ -45,9 +45,10 @@ for i in range(num_update):
     batch_x = test_nume_x[beg:end]
     tensor_x = torch.Tensor(test_nume_x).to(device)
     #这个才是gbdt对应的预测结果
-    out1 = gbm.predict(test_nume_x)
-    roc_val1 = roc_auc_score(test_y, out1)
+    out1 = gbm.predict(batch_x)
+    roc_val1 = roc_auc_score(test_y[beg:end], out1)
     gbdt_dense_roc_es.append(roc_val1)
+    out1=gbm.predict(test_nume_x)
     print('经过{}次更新，当前gbdt_dense的roc值为:{}'.format(i, roc_val1))
     batch_tem_y = predict_gbdt_batch(gbm, batch_x, num_tree_a_group)
     train_tem_y = predict_gbdt_batch(gbm, train_nume_x, num_tree_a_group)
@@ -61,7 +62,7 @@ for i in range(num_update):
     out2 = eval_new_deep_model(deFmNu_model, test_cate_x, test_nume_x, test_y, task='binary')
     roc_val2 = roc_auc_score(test_y, out2)
     deep_roc_es.append(roc_val2)
-    print('经过{}次更新，当前deFmNu的roc值为:{}'.format(i, roc_val2))
+   # print('经过{}次更新，当前deFmNu的roc值为:{}'.format(i, roc_val2))
     out = alpha * out1 + (1 - alpha) * out2
     print('经过{}次更新，当前deFmNu的roc值为:{}'.format(i, roc_auc_score(test_y, out)))
     total_roc_es.append(roc_auc_score(test_y, out))

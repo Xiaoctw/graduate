@@ -103,7 +103,7 @@ def construct_deepfm_model(train_x, train_y, field_size, feat_sizes, lr=3e-2, ta
     # 注意这里全部都要转化为long形式，因为要嵌入
     train_x, train_y = torch.Tensor(train_x).long(), torch.Tensor(train_y)
     data_set = Data.TensorDataset(train_x, train_y)
-    data_loader = Data.DataLoader(dataset=data_set, batch_size=train_x.shape[0] // 5, shuffle=True, num_workers=4)
+    data_loader = Data.DataLoader(dataset=data_set, batch_size=train_x.shape[0] // 5, shuffle=True,)
     total_losses = []
     for epoch in range(num_epoch):
         total_loss = 0
