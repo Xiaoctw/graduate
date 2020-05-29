@@ -5,6 +5,7 @@ import math
 def main():
     task='binary'
     learning_rate=1
+    file_name='Chicago'
     if task == 'regression':
         objective = 'regression'
         metric = 'mse'
@@ -29,7 +30,7 @@ def main():
         'num_threads': -1,
         'learning_rate': learning_rate
     }
-    train_x, train_cate_x, train_nume_x, test_x, test_cate_x, test_nume_x, train_y, test_y = pre_data('Chicago')
+    train_x, train_cate_x, train_nume_x, test_x, test_cate_x, test_nume_x, train_y, test_y = pre_data(file_name)
     n = train_x.shape[0]
     idxes = np.array(range(n))
     np.random.shuffle(idxes)

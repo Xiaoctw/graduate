@@ -8,8 +8,9 @@ import torch.utils.data as Data
 
 class PNN(nn.Module):
     def __init__(self, field_size, feature_sizes, embedding_size=4, d1_size=10,
-                 h_depth=2, is_inner=True):
+                 h_depth=2, is_inner=True,task='binary'):
         super(PNN, self).__init__()
+        self.task=task
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.field_size = field_size
         self.p_size = self.field_size * (self.field_size - 1) // 2
@@ -56,7 +57,8 @@ class PNN(nn.Module):
         x=fun.relu(self.batch_norm_2(self.lin_2(x)))
         x=self.deep_drop_2(x)
         x=self.lin_3(x)
-        x = torch.sigmoid(x)
+        if self.task=='binary':
+            x = torch.sigmoid(x)
         #这一行不可以少,否则计算loss会出问题
         x=x.view(num_item)
         return x
@@ -70,7 +72,7 @@ def construct_pnn_model(train_x, train_y, field_size, feat_sizes, lr=3e-2, task=
         cri = nn.BCELoss(reduction='sum')
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     # train_x, test_x, field_size, feat_sizes = find_deepfm_params(x1=train_x, x2=test_x)
-    model: nn.Module = PNN(field_size=field_size, feature_sizes=feat_sizes, is_inner=is_inner)
+    model: nn.Module = PNN(field_size=field_size, feature_sizes=feat_sizes, is_inner=is_inner,task=task)
     model = model.to(device)
     model.train()
     opt = torch.optim.Adam(lr=lr, params=model.parameters())

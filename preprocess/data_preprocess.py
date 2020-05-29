@@ -19,8 +19,12 @@ def pre_data(data_name):
         return pre_titanic()
     elif data_name=='Chicago':
         return pre_Chicago()
-    # elif data_name=='moscow':
-    #     return pre_moscow()
+    elif data_name=='house':
+        return pre_House()
+    elif data_name=='promotion':
+        return pre_promotion()
+
+
 
 
 def pre_adv_predict():
@@ -37,8 +41,8 @@ def pre_adv_predict():
                           ]
     train_y = pd.read_csv(TRAIN_LABEL_PATH)
     train_x = pd.read_csv(TRAIN_DATA_PATH)
-    print('共有特征{}'.format(train_x.shape[1]))
-    print('连续特征{}'.format(len(NUMERICAL_FEATURES)))
+    # print('共有特征{}'.format(train_x.shape[1]))
+    # print('连续特征{}'.format(len(NUMERICAL_FEATURES)))
     nume_x=train_x[NUMERICAL_FEATURES].copy()
     train_x['Label'] = train_y['label']
     def get_mDay(s):
@@ -62,6 +66,7 @@ def pre_adv_predict():
     train_x = train_x.drop('date', axis=1)
     train_x = train_x.drop('day_month', axis=1)
     train_x=train_x.drop('ID',axis=1)
+    print('数据中缺失值已经处理')
     def cut_A1(val):
         if val <= -4:
             return 0
@@ -461,7 +466,7 @@ def pre_moscow():
 def pre_Chicago():
     root1 = os.path.dirname(os.path.realpath(__file__))
     data_path = root1 + '/data/Chicago_Crimes.csv'
-    X = pd.read_csv(data_path, nrows=8000)
+    X = pd.read_csv(data_path, nrows=4000)
     Y = X['Arrest']
     X = X.drop(['Arrest', 'Unnamed: 0', 'ID', 'Case Number', 'Location Description', 'Year', 'Updated On', 'Location'],
                axis=1)
@@ -485,10 +490,10 @@ def pre_Chicago():
         print('存在缺失值，当前程序退出')
         return
     else:
-        print('当前数据不存在缺失值')
+        print('当前数据缺失值已经处理')
     num_feats = ['month','year','Beat', 'Latitude', 'Longitude', 'District', 'Ward', 'Community Area']
-    print('连续属性:{}'.format(len(num_feats)))
-    print('离散属性个数:{}'.format(X.shape[1]-len(num_feats)))
+    # print('连续属性:{}'.format(len(num_feats)))
+    # print('离散属性个数:{}'.format(X.shape[1]-len(num_feats)))
     num_X = X[num_feats].copy()
     def cut_Block(val):
         if val.split(' ')[-1] == 'AVE':
@@ -594,11 +599,188 @@ def pre_Chicago():
  #    print(test_X.shape)
     return train_X,train_X,train_num_X,test_X,test_X,test_num_X,train_Y,test_Y
 
+def pre_House():
+    root1 = os.path.dirname(os.path.realpath(__file__))
+    data_path = root1 + '/data/fangjiayuce.csv'
+    X = pd.read_csv(data_path, nrows=4000)
+    Y = X['price']
+    X = X.drop(['ID','price'],axis=1)
+    num_feats = ['num_bedroom', 'num_bathroom', 'area_house', 'area_parking', 'rating', 'floorage', 'area_basement', 'latitude','longitude']
+    # print('连续属性:{}'.format(len(num_feats)))
+    # print('离散属性个数:{}'.format(X.shape[1]-len(num_feats)))
+    num_X = X[num_feats].copy()
+    def cut_sale_date(val):
+        val = val // 10000
+        if val == 2014:
+            return 0
+        elif val == 2015:
+            return 1
+        else:
+            return 2
+    X['sale_date'] = X['sale_date'].apply(cut_sale_date)
+    def cut_num_Bedroom(val):
+        if val <= 1:
+            return 0
+        elif val <= 5:
+            return 1
+        return 2
+    X['num_bedroom'] = X['num_bedroom'].apply(cut_num_Bedroom)
+    def cut_num_bathroom(val):
+        if val <= 2:
+            return 0
+        elif val <= 5:
+            return 1
+        return 2
+    X['num_bathroom'] = X['num_bathroom'].apply(cut_num_bathroom)
+    def cut_floor(val):
+        if val <= 2:
+            return 0
+        return 1
+    X['floor'] = X['floor'].apply(cut_floor)
+    def cut_year_built(val):
+        if val <= 1930:
+            return 0
+        elif val <= 1950:
+            return 1
+        elif val <= 1970:
+            return 2
+        return 3
+    X['year_built'] = X['year_built'].apply(cut_year_built)
+
+    def cut_year_repair(val):
+        if val <= 1950:
+            return 0
+        elif val <= 1980:
+            return 1
+        elif val <= 2000:
+            return 2
+        return 3
+
+    X['year_repair'] = X['year_repair'].apply(cut_year_repair)
+    for feat in num_feats:
+        enc = StandardScaler()
+        num_X[feat] = enc.fit(num_X[[feat]]).transform(num_X[[feat]])
+    cat_feat=['sale_date','num_bedroom','num_bathroom','floor','year_built','year_repair']
+    cat_X=X[cat_feat].copy()
+    for col in cat_feat:
+        enc = LabelEncoder()
+        cat_X[col] = enc.fit_transform(cat_X[col])
+    X=pd.concat((num_X,cat_X),axis=1)
+    X, num_X,cat_X, Y = np.array(X), np.array(num_X), np.array(cat_X),np.array(Y)
+    num_train=X.shape[0]
+    idxes = np.array(range(num_train))
+    np.random.shuffle(idxes)
+    num_train = (X.shape[0] // 10) * 8
+    X, num_X,cat_X, Y = X[idxes], num_X[idxes],cat_X[idxes], Y[idxes]
+    train_x, train_num_x,train_cate_x, train_y = X[:num_train], num_X[:num_train],cat_X[:num_train], Y[:num_train]
+    test_x, test_num_x, test_cate_x,test_y = X[num_train:], num_X[num_train:],cat_X[num_train:], Y[num_train:]
+    print('数据预处理完成')
+    return train_x, train_cate_x, train_num_x, test_x, test_cate_x, test_num_x, train_y, test_y
+
+def pre_promotion():
+    cat_Feat=['Age',"JobLevel","StockOptionLevel","PerformanceRating","JobInvolvement"
+,"YearsAtCompany","Gender","TotalWorkingYears","WorkLifeBalance","YearsInCurrentRole","JobRole",
+              "BusinessTravel","OverTime","Over18","PercentSalaryHike","MaritalStatus","RelationshipSatisfaction","Education","Department","TrainingTimesLastYear","EnvironmentSatisfaction","JobSatisfaction","EducationField","YearsSinceLastPromotion"]
+    num_Feat=['DistanceFromHome','MonthlyIncome','NumCompaniesWorked','YearsWithCurrManager']
+    root1 = os.path.dirname(os.path.realpath(__file__))
+    data_path = root1 + '/data/离职预测.csv'
+    X = pd.read_csv(data_path)
+    num_X=X[num_Feat].copy()
+    Y = X['Label']
+    X = X.drop([ 'Label'], axis=1)
+    def cut_Age(val):
+        if val <= 30:
+            return 0
+        elif val <= 40:
+            return 1
+        elif val <= 50:
+            return 2
+        return 3
+    X['Age'] = X['Age'].apply(cut_Age)
+    def cut_Education(val):
+        if val == 4 or val == 2:
+            return 0
+        elif val == 5:
+            return 1
+        return 2
+    X['Education'] = X['Education'].apply(cut_Education)
+    X = X.drop('EmployeeNumber', axis=1)
+    def cut_job_role(val):
+        if val in {'Manager', 'Healthcare Representative',
+                   'Research Director'}:
+            return 0
+        if val in {'Sales Representative'}:
+            return 1
+        if val in {"Laboratory Technician", 'Research Scientist'}:
+            return 2
+        return 3
+    X['JobRole'] = X['JobRole'].apply(cut_job_role)
+    def cut_PercentSalaryHike(val):
+        if val <= 18:
+            return 0
+        elif val <= 22:
+            return 1
+        else:
+            return 2
+    X['PercentSalaryHike'] = X['PercentSalaryHike'].apply(cut_PercentSalaryHike)
+    X=X.drop('StandardHours',axis=1)
+    def cut_totalWorkingYears(val):
+        if val <= 10:
+            return 0
+        elif val <= 20:
+            return 2
+        return 3
+    X['TotalWorkingYears'] = X['TotalWorkingYears'].apply(cut_totalWorkingYears)
+    def cut_Yearsatcompany(val):
+        if val <= 10:
+            return 1
+        elif val <= 20:
+            return 2
+        else:
+            return 3
+    X['YearsAtCompany'] = X['YearsAtCompany'].apply(cut_Yearsatcompany)
+    def cut_yearincurrentrole(val):
+        if val <= 5:
+            return 0
+        elif val <= 10:
+            return 1
+        elif val <= 16:
+            return 2
+        return 3
+    X['YearsInCurrentRole'] = X['YearsInCurrentRole'].apply(cut_yearincurrentrole)
+    def cut_promotion(val):
+        if val <= 4:
+            return 0
+        elif val <= 8:
+            return 1
+        elif val <= 12:
+            return 2
+        return 3
+    X['YearsSinceLastPromotion'] = X['YearsSinceLastPromotion'].apply(cut_promotion)
+    cat_X=X[cat_Feat].copy()
+    for col in cat_Feat:
+        enc = LabelEncoder()
+        cat_X[col] = enc.fit_transform(cat_X[col])
+    for feat in num_Feat:
+        enc = StandardScaler()
+        num_X[feat] = enc.fit(num_X[[feat]]).transform(num_X[[feat]])
+    X=pd.concat((cat_X,num_X),axis=1)
+    X, num_X, cat_X, Y = np.array(X), np.array(num_X), np.array(cat_X), np.array(Y)
+    num_train = X.shape[0]
+    idxes = np.array(range(num_train))
+    np.random.shuffle(idxes)
+    num_train = (X.shape[0] // 10) * 8
+    X, num_X, cat_X, Y = X[idxes], num_X[idxes], cat_X[idxes], Y[idxes]
+    train_x, train_num_x, train_cate_x, train_y = X[:num_train], num_X[:num_train], cat_X[:num_train], Y[:num_train]
+    test_x, test_num_x, test_cate_x, test_y = X[num_train:], num_X[num_train:], cat_X[num_train:], Y[num_train:]
+    print('数据预处理完成')
+    return train_x, train_cate_x, train_num_x, test_x, test_cate_x, test_num_x, train_y, test_y
+
 
 if __name__ == '__main__':
-    train_x, train_cate_x, train_num_x, test_x, test_cate_x, test_num_x, train_y,test_y=pre_Chicago()
-    print(train_cate_x.shape[1])
-    print(train_num_x.shape[1])
+    train_x, train_cate_x, train_num_x, test_x, test_cate_x, test_num_x, train_y,test_y=pre_promotion()
+    print(train_cate_x)
+    print(train_num_x)
    # print(train_cate_x[:10])
     # train_x, _, _, test_x, _, _, train_y, test_y = pre_titanic()
     # print(train_x[:10])

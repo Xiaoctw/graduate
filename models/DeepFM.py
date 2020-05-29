@@ -15,9 +15,10 @@ DeepFM模型
 
 class DeepFM(nn.Module):
     def __init__(self, field_size, feature_sizes, embedding_size=4,
-                 h_depth=2, deep_layers=None, dropout_shallow=None, dropout_deep=None):
+                 h_depth=2, deep_layers=None, dropout_shallow=None, dropout_deep=None,task='binary'):
         super(DeepFM, self).__init__()
         # 默认中间有两个连续层，12个节点和8个节点
+        self.task=task
         if dropout_deep is None:
             dropout_deep = [0.2, 0.2, 0.2]
         if dropout_shallow is None:
@@ -86,7 +87,10 @@ class DeepFM(nn.Module):
             x_deep = fun.relu(x_deep)
             x_deep = getattr(self, 'deep_drop_' + str(i + 1))(x_deep)
         # 返回总的结果
-        total_sum = torch.sigmoid(torch.sum(fm_first, 1) + torch.sum(fm_second, 1) + torch.sum(x_deep, 1) + self.bias)
+        if self.task=='binary':
+            total_sum = torch.sigmoid(torch.sum(fm_first, 1) + torch.sum(fm_second, 1) + torch.sum(x_deep, 1) + self.bias)
+        else:
+            total_sum=torch.sum(fm_first, 1) + torch.sum(fm_second, 1) + torch.sum(x_deep, 1) + self.bias
         return total_sum
 
 
@@ -97,7 +101,7 @@ def construct_deepfm_model(train_x, train_y, field_size, feat_sizes, lr=3e-2, ta
         cri = nn.BCELoss(reduction='sum')
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     # train_x, test_x, field_size, feat_sizes = find_deepfm_params(x1=train_x, x2=test_x)
-    model: nn.Module = DeepFM(field_size=field_size, feature_sizes=feat_sizes)
+    model: nn.Module = DeepFM(field_size=field_size, feature_sizes=feat_sizes,task=task)
     model = model.to(device)
     opt = torch.optim.Adam(lr=lr, params=model.parameters())
     # 注意这里全部都要转化为long形式，因为要嵌入
@@ -118,7 +122,7 @@ def construct_deepfm_model(train_x, train_y, field_size, feat_sizes, lr=3e-2, ta
             loss.backward()
             opt.step()
             total_loss += loss.item()
-        if epoch % 1 == 0:
+        if epoch % 4 == 0:
             print('DeepFM训练过程,第{}次循环，当前loss为：{}'.format(epoch, total_loss))
         total_losses.append(total_loss)
     plt.plot(total_losses, ls='--', color='r')

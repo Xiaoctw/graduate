@@ -13,10 +13,10 @@ class deFmNu(nn.Module):
     def __init__(self, field_size, feature_sizes, num_field_size,
                  embedding_size=4,
                  h_depth=2, deep_layers=None,
-                 dropout_shallow=None, dropout_deep=None):
+                 dropout_shallow=None, dropout_deep=None,task='binary'):
         super(deFmNu, self).__init__()
         # 默认中间有两个连续层，12个节点和8个节点
-
+        self.task=task
         if dropout_shallow is None:
             dropout_shallow = [0.2, 0.2]
         #列表长度加一的关系
@@ -97,9 +97,11 @@ class deFmNu(nn.Module):
             x_deep = fun.relu(x_deep)
             x_deep = getattr(self, 'deep_drop_' + str(i + 1))(x_deep)
         # 返回总的结果
-        total_sum = torch.sigmoid(torch.sum(fm_first, 1) + torch.sum(fm_second, 1) + torch.sum(x_deep, 1) + self.bias)
+        if self.task=='binary':
+            total_sum = torch.sigmoid(torch.sum(fm_first, 1) + torch.sum(fm_second, 1) + torch.sum(x_deep, 1) + self.bias)
+        else:
+            total_sum = (torch.sum(fm_first, 1) + torch.sum(fm_second, 1) + torch.sum(x_deep, 1) + self.bias)
         return total_sum
-
 
 def construct_deFmNu(train_x1, train_x2, train_y, field_size, num_field_size, feat_sizes, embedding_size=4, lr=3e-2,
                      task='regression', num_epoch=40):
@@ -111,7 +113,7 @@ def construct_deFmNu(train_x1, train_x2, train_y, field_size, num_field_size, fe
     # train_x, test_x, field_size, feat_sizes = find_deepfm_params(x1=train_x, x2=test_x)
 
     model: nn.Module = deFmNu(field_size=field_size, feature_sizes=feat_sizes, num_field_size=num_field_size
-                              , embedding_size=embedding_size)
+                              , embedding_size=embedding_size,task=task)
     model = model.to(device)
     model.train()
     opt = torch.optim.Adam(lr=lr, params=model.parameters())
